@@ -16,6 +16,14 @@ const ROBNAIDY = {
   border: 'border-[#A6C261]/40'
 };
 
+const FREE = {
+  name: 'Libre',
+  colorBg: 'bg-stone-100',
+  colorText: 'text-stone-400',
+  dotColor: 'bg-stone-300',
+  border: 'border-stone-200'
+};
+
 const monthNames = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
@@ -66,7 +74,11 @@ export default function App() {
   const afternoonShift = [];
 
   for (let i = 0; i < 5; i++) {
-    if (i % 2 === 0) {
+    if (i === 3) {
+      // Jueves: ambas trabajan juntas en la mañana y libre en la tarde
+      morningShift.push([OTMARY, ROBNAIDY]);
+      afternoonShift.push(FREE);
+    } else if (i % 2 === 0) {
       morningShift.push(mondayMorningWorker);
       afternoonShift.push(mondayAfternoonWorker);
     } else {
@@ -110,6 +122,29 @@ export default function App() {
     if (tempMorning.trim()) setMorningHours(tempMorning.trim());
     if (tempAfternoon.trim()) setAfternoonHours(tempAfternoon.trim());
     setIsModalOpen(false);
+  };
+
+  // Helper para renderizar los bloques de empleados
+  const renderEmployeeBadge = (emp) => {
+    if (Array.isArray(emp)) {
+      return (
+        <div className="flex flex-col gap-1.5">
+          {emp.map((e, idx) => (
+            <div key={idx} className={`${e.colorBg} ${e.colorText} ${e.border} border py-1.5 px-2.5 rounded-xl flex items-center justify-center gap-1.5 font-medium text-xs`}>
+              <span className={`w-2 h-2 rounded-full ${e.dotColor} shrink-0`}></span>
+              <span>{e.name}</span>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    return (
+      <div className={`${emp.colorBg} ${emp.colorText} ${emp.border} border py-2.5 px-3 rounded-xl flex items-center justify-center gap-2 font-medium text-xs sm:text-sm`}>
+        <span className={`w-2 h-2 rounded-full ${emp.dotColor} shrink-0`}></span>
+        <span>{emp.name}</span>
+      </div>
+    );
   };
 
   return (
@@ -222,10 +257,7 @@ export default function App() {
                     </td>
                     {morningShift.map((emp, i) => (
                       <td key={i} className="py-4 px-2 sm:px-3 text-center">
-                        <div className={`${emp.colorBg} ${emp.colorText} ${emp.border} border py-2.5 px-3 rounded-xl flex items-center justify-center gap-2 font-medium text-xs sm:text-sm`}>
-                          <span className={`w-2 h-2 rounded-full ${emp.dotColor} shrink-0`}></span>
-                          <span>{emp.name}</span>
-                        </div>
+                        {renderEmployeeBadge(emp)}
                       </td>
                     ))}
                   </tr>
@@ -245,10 +277,7 @@ export default function App() {
                     </td>
                     {afternoonShift.map((emp, i) => (
                       <td key={i} className="py-4 px-2 sm:px-3 text-center">
-                        <div className={`${emp.colorBg} ${emp.colorText} ${emp.border} border py-2.5 px-3 rounded-xl flex items-center justify-center gap-2 font-medium text-xs sm:text-sm`}>
-                          <span className={`w-2 h-2 rounded-full ${emp.dotColor} shrink-0`}></span>
-                          <span>{emp.name}</span>
-                        </div>
+                        {renderEmployeeBadge(emp)}
                       </td>
                     ))}
                   </tr>
