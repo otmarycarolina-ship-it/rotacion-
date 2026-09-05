@@ -2,26 +2,26 @@ import React, { useState } from 'react';
 
 const OTMARY = {
   name: 'Otmary',
-  colorBg: 'bg-[#A88AED]/15',
-  colorText: 'text-[#5B3CB0]',
-  dotColor: 'bg-[#A88AED]',
-  border: 'border-[#A88AED]/30'
+  colorBg: 'bg-[#A88AED]/15 print:bg-[#A88AED]/40',
+  colorText: 'text-[#5B3CB0] print:text-[#38206E] print:font-bold',
+  dotColor: 'bg-[#A88AED] print:bg-[#38206E]',
+  border: 'border-[#A88AED]/30 print:border-[#38206E]'
 };
 
 const ROBNAIDY = {
   name: 'Robnaidy',
-  colorBg: 'bg-[#A6C261]/20',
-  colorText: 'text-[#4F6914]',
-  dotColor: 'bg-[#A6C261]',
-  border: 'border-[#A6C261]/40'
+  colorBg: 'bg-[#A6C261]/20 print:bg-[#A6C261]/40',
+  colorText: 'text-[#4F6914] print:text-[#32430C] print:font-bold',
+  dotColor: 'bg-[#A6C261] print:bg-[#32430C]',
+  border: 'border-[#A6C261]/40 print:border-[#32430C]'
 };
 
 const FREE = {
   name: 'Libre',
-  colorBg: 'bg-stone-100',
-  colorText: 'text-stone-400',
-  dotColor: 'bg-stone-300',
-  border: 'border-stone-200'
+  colorBg: 'bg-stone-100 print:bg-stone-200',
+  colorText: 'text-stone-400 print:text-stone-700 print:font-bold',
+  dotColor: 'bg-stone-300 print:bg-stone-500',
+  border: 'border-stone-200 print:border-stone-400'
 };
 
 const monthNames = [
@@ -75,7 +75,6 @@ export default function App() {
 
   for (let i = 0; i < 5; i++) {
     if (i === 3) {
-      // Jueves (índice 3): Otmary y Robnaidy juntas en la mañana, libre en la tarde
       morningShift.push([OTMARY, ROBNAIDY]);
       afternoonShift.push(FREE);
     } else if (i % 2 === 0) {
@@ -127,9 +126,9 @@ export default function App() {
   const renderEmployeeBadge = (emp) => {
     if (Array.isArray(emp)) {
       return (
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1.5">
           {emp.map((e, idx) => (
-            <div key={idx} className={`${e.colorBg} ${e.colorText} ${e.border} border py-1.5 px-2 rounded-xl flex items-center justify-center gap-1.5 font-medium text-xs`}>
+            <div key={idx} className={`${e.colorBg} ${e.colorText} ${e.border} border py-1.5 px-2.5 rounded-xl flex items-center justify-center gap-1.5 font-medium text-xs`}>
               <span className={`w-2 h-2 rounded-full ${e.dotColor} shrink-0`}></span>
               <span>{e.name}</span>
             </div>
@@ -168,15 +167,15 @@ export default function App() {
         </header>
 
         <main className="max-w-4xl mx-auto px-4 sm:px-6 pt-8 pb-12">
-          <div className="hidden print-header mb-6 flex-col items-center justify-center text-center">
+          <div className="hidden print:flex mb-6 flex-col items-center justify-center text-center">
             <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-brand-indigo text-white mb-2">
               <i className="fa-solid fa-calendar-week text-base"></i>
             </div>
-            <h1 className="text-2xl font-bold text-stone-800 tracking-tight">Horario Laboral de Turnos</h1>
-            <p className="text-brand-indigo font-bold text-sm mt-1 uppercase tracking-widest bg-brand-beige/50 px-4 py-1 rounded-full border border-brand-beige inline-block">
+            <h1 className="text-2xl font-bold text-stone-900 tracking-tight">Horario Laboral de Turnos</h1>
+            <p className="text-brand-indigo font-extrabold text-sm mt-1 uppercase tracking-widest bg-brand-beige/50 px-4 py-1 rounded-full border border-stone-400 inline-block">
               Mes de {monthNames[month]} {year}
             </p>
-            <p className="text-stone-500 text-xs font-semibold mt-1">
+            <p className="text-stone-700 text-xs font-bold mt-1">
               Cuadro de Horario - Semana {activeWeekIndex + 1} de {monthWeeks.length}
             </p>
           </div>
@@ -220,19 +219,19 @@ export default function App() {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm border border-stone-200/80 overflow-hidden print-card">
+          <div className="bg-white rounded-2xl shadow-sm border border-stone-200/80 overflow-hidden print:border-2 print:border-stone-500">
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-left text-xs sm:text-sm">
                 <thead>
-                  <tr className="bg-brand-beige/50 border-b border-stone-200/60 text-stone-600">
-                    <th className="py-4 px-4 sm:px-6 font-semibold uppercase tracking-wider text-[11px] text-center w-36 sm:w-40">Turno</th>
+                  <tr className="bg-brand-beige/50 print:bg-stone-200 border-b border-stone-200/60 print:border-stone-400 text-stone-600 print:text-stone-900">
+                    <th className="py-4 px-4 sm:px-6 font-semibold print:font-bold uppercase tracking-wider text-[11px] text-center w-36 sm:w-40">Turno</th>
                     {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'].map((day, idx) => {
                       const d = new Date(selectedMonday);
                       d.setDate(selectedMonday.getDate() + idx);
                       return (
-                        <th key={day} className="py-3 px-2 sm:px-4 font-semibold text-stone-700 text-center">
+                        <th key={day} className="py-3 px-2 sm:px-4 font-semibold print:font-bold text-stone-700 print:text-stone-900 text-center">
                           <div>{day}</div>
-                          <div className="text-[11px] font-normal text-stone-400 mt-0.5">
+                          <div className="text-[11px] font-normal print:font-semibold text-stone-400 print:text-stone-600 mt-0.5">
                             {d.getDate()} {monthNames[d.getMonth()].substring(0, 3)}
                           </div>
                         </th>
@@ -240,18 +239,18 @@ export default function App() {
                     })}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-stone-100">
+                <tbody className="divide-y divide-stone-100 print:divide-stone-400">
                   <tr>
-                    <td className="py-5 px-4 font-semibold text-stone-600 bg-brand-bgSoft/60 border-r border-stone-100 text-center">
+                    <td className="py-5 px-4 font-semibold print:font-bold text-stone-600 print:text-stone-900 bg-brand-bgSoft/60 print:bg-stone-100 border-r border-stone-100 print:border-stone-400 text-center">
                       <div className="flex flex-col items-center justify-center gap-1">
-                        <div className="flex items-center gap-1.5 text-stone-700 font-bold">
-                          <i className="fa-regular fa-sun text-amber-500 text-sm"></i>
+                        <div className="flex items-center gap-1.5 text-stone-700 print:text-stone-900 font-bold">
+                          <i className="fa-regular fa-sun text-amber-500 print:text-amber-600 text-sm"></i>
                           <span className="text-xs">Mañana</span>
                           <button onClick={openModal} className="text-stone-400 hover:text-brand-indigo transition no-print ml-0.5">
                             <i className="fa-solid fa-pencil text-[10px]"></i>
                           </button>
                         </div>
-                        <span className="text-[10px] text-stone-500 font-normal bg-stone-200/50 px-2 py-0.5 rounded-full">{morningHours}</span>
+                        <span className="text-[10px] text-stone-500 print:text-stone-700 print:font-bold bg-stone-200/50 print:bg-stone-300 px-2 py-0.5 rounded-full">{morningHours}</span>
                       </div>
                     </td>
                     {morningShift.map((emp, i) => (
@@ -262,16 +261,16 @@ export default function App() {
                   </tr>
 
                   <tr>
-                    <td className="py-5 px-4 font-semibold text-stone-600 bg-brand-bgSoft/60 border-r border-stone-100 text-center">
+                    <td className="py-5 px-4 font-semibold print:font-bold text-stone-600 print:text-stone-900 bg-brand-bgSoft/60 print:bg-stone-100 border-r border-stone-100 print:border-stone-400 text-center">
                       <div className="flex flex-col items-center justify-center gap-1">
-                        <div className="flex items-center gap-1.5 text-stone-700 font-bold">
-                          <i className="fa-regular fa-moon text-indigo-400 text-sm"></i>
+                        <div className="flex items-center gap-1.5 text-stone-700 print:text-stone-900 font-bold">
+                          <i className="fa-regular fa-moon text-indigo-400 print:text-indigo-600 text-sm"></i>
                           <span className="text-xs">Tarde</span>
                           <button onClick={openModal} className="text-stone-400 hover:text-brand-indigo transition no-print ml-0.5">
                             <i className="fa-solid fa-pencil text-[10px]"></i>
                           </button>
                         </div>
-                        <span className="text-[10px] text-stone-500 font-normal bg-stone-200/50 px-2 py-0.5 rounded-full">{afternoonHours}</span>
+                        <span className="text-[10px] text-stone-500 print:text-stone-700 print:font-bold bg-stone-200/50 print:bg-stone-300 px-2 py-0.5 rounded-full">{afternoonHours}</span>
                       </div>
                     </td>
                     {afternoonShift.map((emp, i) => (
