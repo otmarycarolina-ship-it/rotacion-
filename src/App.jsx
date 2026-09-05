@@ -75,7 +75,7 @@ export default function App() {
 
   for (let i = 0; i < 5; i++) {
     if (i === 3) {
-      // Jueves: ambas trabajan juntas en la mañana y libre en la tarde
+      // Jueves (índice 3): Otmary y Robnaidy juntas en la mañana, libre en la tarde
       morningShift.push([OTMARY, ROBNAIDY]);
       afternoonShift.push(FREE);
     } else if (i % 2 === 0) {
@@ -124,13 +124,12 @@ export default function App() {
     setIsModalOpen(false);
   };
 
-  // Helper para renderizar los bloques de empleados
   const renderEmployeeBadge = (emp) => {
     if (Array.isArray(emp)) {
       return (
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-1">
           {emp.map((e, idx) => (
-            <div key={idx} className={`${e.colorBg} ${e.colorText} ${e.border} border py-1.5 px-2.5 rounded-xl flex items-center justify-center gap-1.5 font-medium text-xs`}>
+            <div key={idx} className={`${e.colorBg} ${e.colorText} ${e.border} border py-1.5 px-2 rounded-xl flex items-center justify-center gap-1.5 font-medium text-xs`}>
               <span className={`w-2 h-2 rounded-full ${e.dotColor} shrink-0`}></span>
               <span>{e.name}</span>
             </div>
