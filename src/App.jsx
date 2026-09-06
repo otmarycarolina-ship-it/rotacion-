@@ -63,6 +63,25 @@ const getInitialDate = () => {
 };
 
 export default function App() {
+  // Inicialización de OneSignal con tu App ID
+  useEffect(() => {
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    window.OneSignalDeferred.push(async function(OneSignal) {
+      await OneSignal.init({
+        appId: "a354b888-1a1e-4c0a-8e77-ea3a1672dd55",
+        allowLocalhostAsSecureOrigin: true,
+      });
+    });
+
+    if (!document.getElementById('onesignal-sdk')) {
+      const script = document.createElement('script');
+      script.id = 'onesignal-sdk';
+      script.src = 'https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js';
+      script.async = true;
+      document.head.appendChild(script);
+    }
+  }, []);
+
   const [currentDate, setCurrentDate] = useState(getInitialDate);
   
   const [weekInMonth, setWeekInMonth] = useState(() => {
@@ -84,7 +103,6 @@ export default function App() {
     return foundIdx !== -1 ? foundIdx + 1 : 1;
   });
 
-  // Persistencia de horarios con localStorage
   const [morningHours, setMorningHours] = useState(() => {
     return localStorage.getItem('morningHours') || '9:00 AM - 12:00 PM';
   });
@@ -93,7 +111,6 @@ export default function App() {
     return localStorage.getItem('afternoonHours') || '3:00 PM - 6:00 PM';
   });
 
-  // Filtro de empleada (ALL, Otmary, Robnaidy)
   const [selectedEmployeeFilter, setSelectedEmployeeFilter] = useState('ALL');
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -126,11 +143,11 @@ export default function App() {
   const afternoonShift = [];
 
   const rotationCycle = [
-    { morning: mondayMorningWorker, afternoon: mondayAfternoonWorker }, // Lunes
-    { morning: mondayAfternoonWorker, afternoon: mondayMorningWorker }, // Martes
-    { morning: mondayMorningWorker, afternoon: mondayAfternoonWorker }, // Miércoles
-    { morning: [OTMARY, ROBNAIDY], afternoon: FREE },                   // Jueves
-    { morning: mondayAfternoonWorker, afternoon: mondayMorningWorker }  // Viernes
+    { morning: mondayMorningWorker, afternoon: mondayAfternoonWorker },
+    { morning: mondayAfternoonWorker, afternoon: mondayMorningWorker },
+    { morning: mondayMorningWorker, afternoon: mondayAfternoonWorker },
+    { morning: [OTMARY, ROBNAIDY], afternoon: FREE },
+    { morning: mondayAfternoonWorker, afternoon: mondayMorningWorker }
   ];
 
   for (let i = 0; i < 5; i++) {
@@ -138,7 +155,6 @@ export default function App() {
     afternoonShift.push(rotationCycle[i].afternoon);
   }
 
-  // Comprobar si hoy es fin de semana para mostrar aviso de "Semana Entrante"
   const todayReal = new Date();
   const isWeekendNow = todayReal.getDay() === 0 || todayReal.getDay() === 6;
 
@@ -237,7 +253,6 @@ export default function App() {
         </header>
 
         <main className="max-w-4xl mx-auto px-4 sm:px-6 pt-8 pb-12">
-          {/* Cartel informativo de "Semana Entrante" durante fin de semana */}
           {isWeekendNow && (
             <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-center gap-2 text-amber-800 text-xs font-medium no-print">
               <i className="fa-solid fa-clock-rotate-left text-amber-600"></i>
@@ -285,7 +300,6 @@ export default function App() {
               </button>
             </div>
 
-            {/* Botones interactivos para filtrar el horario por empleada */}
             <div className="flex items-center gap-2 text-xs bg-brand-bgSoft p-1.5 rounded-full border border-stone-200/60">
               <button
                 onClick={() => setSelectedEmployeeFilter('ALL')}
