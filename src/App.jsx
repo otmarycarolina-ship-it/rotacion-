@@ -62,31 +62,31 @@ export default function App() {
   const activeWeekIndex = Math.min(Math.max(weekInMonth - 1, 0), monthWeeks.length - 1);
   const selectedMonday = monthWeeks[activeWeekIndex] || new Date();
 
-  // Cambio automático por semana (sábado a sábado)
-  const epoch = new Date(2024, 0, 1);
-  const diffTime = Math.abs(selectedMonday - epoch);
+  // Cambiamos el cálculo global basado en sábado. 
+  // Al avanzar al sábado, tomamos la fecha del sábado (selectedMonday + 5 días) para calcular la semana de rotación automáticamente.
+  const saturdayOfSelectedWeek = new Date(selectedMonday);
+  saturdayOfSelectedWeek.setDate(selectedMonday.getDate() + 5);
+
+  const epoch = new Date(2024, 0, 6); // Usamos un sábado base conocido
+  const diffTime = Math.abs(saturdayOfSelectedWeek - epoch);
   const weekNumberGlobal = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7));
   const isOddWeek = weekNumberGlobal % 2 !== 0;
 
-  // Lunes alternado por semana para mañana y tarde
-  const mondayMorningWorker = isOddWeek ? OTMARY : ROBNAIDY;
-  const mondayAfternoonWorker = isOddWeek ? ROBNAIDY : OTMARY;
-
+  // Secuencias exactas solicitadas:
+  // Mañana: Lunes a Viernes -> [Robnaidy, Otmary, Robnaidy, Otmary, Robnaidy] (Semana Impar) o alternada (Semana Par)
+  // Tarde: Lunes a Viernes -> [Otmary, Robnaidy, Otmary, [Otmary, Robnaidy] (Libre el jueves tarde), Robnaidy, Otmary] (Ajustado según orden exacto)
+  
   const morningShift = [];
   const afternoonShift = [];
 
-  for (let i = 0; i < 5; i++) {
-    if (i === 3) {
-      // Jueves: Ambas trabajan en la mañana y libre en la tarde
-      morningShift.push([OTMARY, ROBNAIDY]);
-      afternoonShift.push(FREE);
-    } else {
-      // Días Lunes (0), Martes (1), Miércoles (2) y Viernes (4)
-      // Se alternan consecutivamente: si el lunes la mañana es WorkerA, el martes es WorkerB, miércoles WorkerA, viernes WorkerB.
-      const isEvenDayIndex = (i % 2 === 0);
-      morningShift.push(isEvenDayIndex ? mondayMorningWorker : mondayAfternoonWorker);
-      afternoonShift.push(isEvenDayIndex ? mondayAfternoonWorker : mondayMorningWorker);
-    }
+  if (isOddWeek) {
+    // Semana tipo A (Impar)
+    morningShift.push(ROBNAIDY, OTMARY, ROBNAIDY, OTMARY, ROBNAIDY);
+    afternoonShift.push(OTMARY, ROBNAIDY, OTMARY, [OTMARY, ROBNAIDY], ROBNAIDY);
+  } else {
+    // Semana tipo B (Par - rotadas)
+    morningShift.push(OTMARY, ROBNAIDY, OTMARY, ROBNAIDY, OTMARY);
+    afternoonShift.push(ROBNAIDY, OTMARY, ROBNAIDY, [ROBNAIDY, OTMARY], OTMARY);
   }
 
   const nextWeek = () => {
@@ -136,6 +136,15 @@ export default function App() {
               <span>{e.name}</span>
             </div>
           ))}
+        </div>
+      );
+    }
+
+    if (emp === FREE) {
+      return (
+        <div className={`${FREE.colorBg} ${FREE.colorText} ${FREE.border} border py-2.5 px-3 rounded-xl flex items-center justify-center gap-2 font-medium text-xs sm:text-sm`}>
+          <span className={`w-2 h-2 rounded-full ${FREE.dotColor} shrink-0`}></span>
+          <span>{FREE.name}</span>
         </div>
       );
     }
@@ -246,9 +255,12 @@ export default function App() {
                   <tr>
                     <td className="py-5 px-4 font-semibold print:font-bold text-stone-600 print:text-stone-900 bg-brand-bgSoft/60 print:bg-stone-100 border-r border-stone-100 print:border-stone-400 text-center">
                       <div className="flex flex-col items-center justify-center gap-1">
-                        <div className="flex items-center gap-1.5 text-stone-700 print:text-stone-900 font-bold">
+                        <div className="flex items-center justify-center gap-1.5 text-stone-700 print:text-stone-900 font-bold w-full">
                           <i className="fa-regular fa-sun text-amber-500 print:text-amber-600 text-sm"></i>
                           <span className="text-xs">Mañana</span>
+                          <button onClick={openModal} className="text-stone-400 hover:text-brand-indigo transition no-print ml-1">
+                            <i className="fa-solid fa-pencil text-[10px]"></i>
+                          </button>
                         </div>
                         <span className="text-[10px] text-stone-500 print:text-stone-700 print:font-bold bg-stone-200/50 print:bg-stone-300 px-2 py-0.5 rounded-full">{morningHours}</span>
                       </div>
@@ -263,10 +275,10 @@ export default function App() {
                   <tr>
                     <td className="py-5 px-4 font-semibold print:font-bold text-stone-600 print:text-stone-900 bg-brand-bgSoft/60 print:bg-stone-100 border-r border-stone-100 print:border-stone-400 text-center">
                       <div className="flex flex-col items-center justify-center gap-1">
-                        <div className="flex items-center gap-1.5 text-stone-700 print:text-stone-900 font-bold">
+                        <div className="flex items-center justify-center gap-1.5 text-stone-700 print:text-stone-900 font-bold w-full">
                           <i className="fa-regular fa-moon text-indigo-400 print:text-indigo-600 text-sm"></i>
-                          <span className="text-xs">Turno</span>
-                          <button onClick={openModal} className="text-stone-400 hover:text-brand-indigo transition no-print ml-0.5" title="Editar horas">
+                          <span className="text-xs">Tarde</span>
+                          <button onClick={openModal} className="text-stone-400 hover:text-brand-indigo transition no-print ml-1">
                             <i className="fa-solid fa-pencil text-[10px]"></i>
                           </button>
                         </div>
