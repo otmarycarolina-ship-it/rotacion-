@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const OTMARY = {
+  id: 'Otmary',
   name: 'Otmary',
   colorBg: 'bg-[#A88AED]/15 print:bg-[#A88AED]/40',
   colorText: 'text-[#5B3CB0] print:text-[#38206E] print:font-bold',
@@ -9,6 +10,7 @@ const OTMARY = {
 };
 
 const ROBNAIDY = {
+  id: 'Robnaidy',
   name: 'Robnaidy',
   colorBg: 'bg-[#A6C261]/20 print:bg-[#A6C261]/40',
   colorText: 'text-[#4F6914] print:text-[#32430C] print:font-bold',
@@ -17,6 +19,7 @@ const ROBNAIDY = {
 };
 
 const FREE = {
+  id: 'Libre',
   name: 'Libre',
   colorBg: 'bg-stone-100 print:bg-stone-200',
   colorText: 'text-stone-400 print:text-stone-700 print:font-bold',
@@ -29,7 +32,6 @@ const monthNames = [
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
 ];
 
-// Función auxiliar global para calcular las semanas del mes
 const calculateMonthWeeks = (year, month) => {
   const weeks = [];
   const firstDay = new Date(year, month, 1);
@@ -48,7 +50,6 @@ const calculateMonthWeeks = (year, month) => {
   return weeks;
 };
 
-// Obtiene la fecha objetivo (si es fin de semana, pasa al lunes siguiente)
 const getInitialDate = () => {
   const today = new Date();
   const dayOfWeek = today.getDay();
@@ -64,7 +65,6 @@ const getInitialDate = () => {
 export default function App() {
   const [currentDate, setCurrentDate] = useState(getInitialDate);
   
-  // Sincroniza la semana activa con la fecha inicial corregida
   const [weekInMonth, setWeekInMonth] = useState(() => {
     const initialDate = getInitialDate();
     const weeks = calculateMonthWeeks(initialDate.getFullYear(), initialDate.getMonth());
@@ -84,11 +84,29 @@ export default function App() {
     return foundIdx !== -1 ? foundIdx + 1 : 1;
   });
 
-  const [morningHours, setMorningHours] = useState('9:00 AM - 12:00 PM');
-  const [afternoonHours, setAfternoonHours] = useState('3:00 PM - 6:00 PM');
+  // Persistencia de horarios con localStorage
+  const [morningHours, setMorningHours] = useState(() => {
+    return localStorage.getItem('morningHours') || '9:00 AM - 12:00 PM';
+  });
+
+  const [afternoonHours, setAfternoonHours] = useState(() => {
+    return localStorage.getItem('afternoonHours') || '3:00 PM - 6:00 PM';
+  });
+
+  // Filtro de empleada (ALL, Otmary, Robnaidy)
+  const [selectedEmployeeFilter, setSelectedEmployeeFilter] = useState('ALL');
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [tempMorning, setTempMorning] = useState('');
   const [tempAfternoon, setTempAfternoon] = useState('');
+
+  useEffect(() => {
+    localStorage.setItem('morningHours', morningHours);
+  }, [morningHours]);
+
+  useEffect(() => {
+    localStorage.setItem('afternoonHours', afternoonHours);
+  }, [afternoonHours]);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -119,6 +137,16 @@ export default function App() {
     morningShift.push(rotationCycle[i].morning);
     afternoonShift.push(rotationCycle[i].afternoon);
   }
+
+  // Comprobar si hoy es fin de semana para mostrar aviso de "Semana Entrante"
+  const todayReal = new Date();
+  const isWeekendNow = todayReal.getDay() === 0 || todayReal.getDay() === 6;
+
+  const isSameDay = (d1, d2) => {
+    return d1.getFullYear() === d2.getFullYear() &&
+           d1.getMonth() === d2.getMonth() &&
+           d1.getDate() === d2.getDate();
+  };
 
   const nextWeek = () => {
     if (weekInMonth < monthWeeks.length) {
@@ -161,18 +189,26 @@ export default function App() {
     if (Array.isArray(emp)) {
       return (
         <div className="flex flex-col gap-1.5">
-          {emp.map((e, idx) => (
-            <div key={idx} className={`${e.colorBg} ${e.colorText} ${e.border} border py-1.5 px-2.5 rounded-xl flex items-center justify-center gap-1.5 font-medium text-xs`}>
-              <span className={`w-2 h-2 rounded-full ${e.dotColor} shrink-0`}></span>
-              <span>{e.name}</span>
-            </div>
-          ))}
+          {emp.map((e, idx) => {
+            const isDimmed = selectedEmployeeFilter !== 'ALL' && e.name !== selectedEmployeeFilter;
+            return (
+              <div 
+                key={idx} 
+                className={`${e.colorBg} ${e.colorText} ${e.border} border py-1.5 px-2.5 rounded-xl flex items-center justify-center gap-1.5 font-medium text-xs transition-opacity duration-200 ${isDimmed ? 'opacity-30' : 'opacity-100'}`}
+              >
+                <span className={`w-2 h-2 rounded-full ${e.dotColor} shrink-0`}></span>
+                <span>{e.name}</span>
+              </div>
+            );
+          })}
         </div>
       );
     }
 
+    const isDimmed = selectedEmployeeFilter !== 'ALL' && emp.name !== selectedEmployeeFilter;
+
     return (
-      <div className={`${emp.colorBg} ${emp.colorText} ${emp.border} border py-2.5 px-3 rounded-xl flex items-center justify-center gap-2 font-medium text-xs sm:text-sm`}>
+      <div className={`${emp.colorBg} ${emp.colorText} ${emp.border} border py-2.5 px-3 rounded-xl flex items-center justify-center gap-2 font-medium text-xs sm:text-sm transition-opacity duration-200 ${isDimmed ? 'opacity-30' : 'opacity-100'}`}>
         <span className={`w-2 h-2 rounded-full ${emp.dotColor} shrink-0`}></span>
         <span>{emp.name}</span>
       </div>
@@ -201,6 +237,14 @@ export default function App() {
         </header>
 
         <main className="max-w-4xl mx-auto px-4 sm:px-6 pt-8 pb-12">
+          {/* Cartel informativo de "Semana Entrante" durante fin de semana */}
+          {isWeekendNow && (
+            <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-center gap-2 text-amber-800 text-xs font-medium no-print">
+              <i className="fa-solid fa-clock-rotate-left text-amber-600"></i>
+              <span>Viendo automáticamente el horario para la <strong>semana entrante</strong>.</span>
+            </div>
+          )}
+
           <div className="hidden print:flex mb-6 flex-col items-center justify-center text-center">
             <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-brand-indigo text-white mb-2">
               <i className="fa-solid fa-calendar-week text-base"></i>
@@ -241,15 +285,40 @@ export default function App() {
               </button>
             </div>
 
-            <div className="flex items-center gap-6 text-xs bg-brand-bgSoft px-5 py-2.5 rounded-full border border-stone-200/60">
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-brand-indigo inline-block"></span>
-                <span className="font-semibold text-stone-700">Otmary</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-brand-celery inline-block"></span>
-                <span className="font-semibold text-stone-700">Robnaidy</span>
-              </div>
+            {/* Botones interactivos para filtrar el horario por empleada */}
+            <div className="flex items-center gap-2 text-xs bg-brand-bgSoft p-1.5 rounded-full border border-stone-200/60">
+              <button
+                onClick={() => setSelectedEmployeeFilter('ALL')}
+                className={`px-3 py-1.5 rounded-full font-semibold transition ${
+                  selectedEmployeeFilter === 'ALL'
+                    ? 'bg-white text-stone-800 shadow-sm'
+                    : 'text-stone-500 hover:text-stone-800'
+                }`}
+              >
+                Todas
+              </button>
+              <button
+                onClick={() => setSelectedEmployeeFilter('Otmary')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full font-semibold transition ${
+                  selectedEmployeeFilter === 'Otmary'
+                    ? 'bg-[#A88AED]/20 text-[#5B3CB0] shadow-sm'
+                    : 'text-stone-500 hover:text-stone-800'
+                }`}
+              >
+                <span className="w-2.5 h-2.5 rounded-full bg-[#A88AED]"></span>
+                Otmary
+              </button>
+              <button
+                onClick={() => setSelectedEmployeeFilter('Robnaidy')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full font-semibold transition ${
+                  selectedEmployeeFilter === 'Robnaidy'
+                    ? 'bg-[#A6C261]/30 text-[#4F6914] shadow-sm'
+                    : 'text-stone-500 hover:text-stone-800'
+                }`}
+              >
+                <span className="w-2.5 h-2.5 rounded-full bg-[#A6C261]"></span>
+                Robnaidy
+              </button>
             </div>
           </div>
 
@@ -269,9 +338,23 @@ export default function App() {
                     {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'].map((day, idx) => {
                       const d = new Date(selectedMonday);
                       d.setDate(selectedMonday.getDate() + idx);
+                      const isToday = isSameDay(d, todayReal);
+
                       return (
-                        <th key={day} className="py-3 px-2 sm:px-4 font-semibold print:font-bold text-stone-700 print:text-stone-900 text-center">
-                          <div>{day}</div>
+                        <th 
+                          key={day} 
+                          className={`py-3 px-2 sm:px-4 font-semibold print:font-bold text-stone-700 print:text-stone-900 text-center transition-colors ${
+                            isToday ? 'bg-amber-100/60 border-b-2 border-amber-400' : ''
+                          }`}
+                        >
+                          <div className="flex items-center justify-center gap-1">
+                            <span>{day}</span>
+                            {isToday && (
+                              <span className="text-[9px] bg-amber-500 text-white font-bold px-1.5 py-0.5 rounded-full no-print uppercase">
+                                Hoy
+                              </span>
+                            )}
+                          </div>
                           <div className="text-[11px] font-normal print:font-semibold text-stone-400 print:text-stone-600 mt-0.5">
                             {d.getDate()} {monthNames[d.getMonth()].substring(0, 3)}
                           </div>
@@ -291,11 +374,22 @@ export default function App() {
                         <span className="text-[10px] text-stone-500 print:text-stone-700 print:font-bold bg-stone-200/50 print:bg-stone-300 px-2 py-0.5 rounded-full">{morningHours}</span>
                       </div>
                     </td>
-                    {morningShift.map((emp, i) => (
-                      <td key={i} className="py-4 px-2 sm:px-3 text-center">
-                        {renderEmployeeBadge(emp)}
-                      </td>
-                    ))}
+                    {morningShift.map((emp, i) => {
+                      const d = new Date(selectedMonday);
+                      d.setDate(selectedMonday.getDate() + i);
+                      const isToday = isSameDay(d, todayReal);
+
+                      return (
+                        <td 
+                          key={i} 
+                          className={`py-4 px-2 sm:px-3 text-center transition-colors ${
+                            isToday ? 'bg-amber-50/40' : ''
+                          }`}
+                        >
+                          {renderEmployeeBadge(emp)}
+                        </td>
+                      );
+                    })}
                   </tr>
 
                   <tr>
@@ -308,11 +402,22 @@ export default function App() {
                         <span className="text-[10px] text-stone-500 print:text-stone-700 print:font-bold bg-stone-200/50 print:bg-stone-300 px-2 py-0.5 rounded-full">{afternoonHours}</span>
                       </div>
                     </td>
-                    {afternoonShift.map((emp, i) => (
-                      <td key={i} className="py-4 px-2 sm:px-3 text-center">
-                        {renderEmployeeBadge(emp)}
-                      </td>
-                    ))}
+                    {afternoonShift.map((emp, i) => {
+                      const d = new Date(selectedMonday);
+                      d.setDate(selectedMonday.getDate() + i);
+                      const isToday = isSameDay(d, todayReal);
+
+                      return (
+                        <td 
+                          key={i} 
+                          className={`py-4 px-2 sm:px-3 text-center transition-colors ${
+                            isToday ? 'bg-amber-50/40' : ''
+                          }`}
+                        >
+                          {renderEmployeeBadge(emp)}
+                        </td>
+                      );
+                    })}
                   </tr>
                 </tbody>
               </table>
