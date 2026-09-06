@@ -62,50 +62,39 @@ export default function App() {
   const activeWeekIndex = Math.min(Math.max(weekInMonth - 1, 0), monthWeeks.length - 1);
   const selectedMonday = monthWeeks[activeWeekIndex] || new Date();
 
-  // Ajuste para que a partir del sábado se visualice automáticamente la siguiente semana
-  const todayCheck = new Date();
-  const isCurrentWeekAndWeekend = 
-    todayCheck.getFullYear() === selectedMonday.getFullYear() &&
-    todayCheck.getMonth() === selectedMonday.getMonth() &&
-    todayCheck.getDate() >= selectedMonday.getDate() &&
-    todayCheck.getDate() < selectedMonday.getDate() + 7 &&
-    todayCheck.getDay() === 6; // Sábado
-
-  const effectiveMonday = new Date(selectedMonday);
-  if (isCurrentWeekAndWeekend) {
-    effectiveMonday.setDate(effectiveMonday.getDate() + 7);
-  }
-
   const epoch = new Date(2024, 0, 1);
-  const diffTime = Math.abs(effectiveMonday - epoch);
+  const diffTime = Math.abs(selectedMonday - epoch);
   const weekNumberGlobal = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7));
   const isOddWeek = weekNumberGlobal % 2 !== 0;
 
-  const mondayMorningWorker = isOddWeek ? OTMARY : ROBNAIDY;
-  const mondayAfternoonWorker = isOddWeek ? ROBNAIDY : OTMARY;
+  // Rotación semanal general
+  const primaryWorker = isOddWeek ? OTMARY : ROBNAIDY;
+  const secondaryWorker = isOddWeek ? ROBNAIDY : OTMARY;
 
   const morningShift = [];
   const afternoonShift = [];
 
   for (let i = 0; i < 5; i++) {
-    if (i === 2) { 
-      // Miércoles: intercalado (si lunes es Otmary en mañana, miércoles es Robnaidy en mañana y viceversa)
-      morningShift.push(mondayAfternoonWorker);
-      afternoonShift.push(mondayMorningWorker);
-    } else if (i === 3) { 
+    if (i === 3) {
       // Jueves
       morningShift.push([OTMARY, ROBNAIDY]);
       afternoonShift.push(FREE);
-    } else if (i === 4) { 
-      // Viernes: Otmary en mañana y tarde para mantener secuencia
-      morningShift.push(OTMARY);
-      afternoonShift.push(OTMARY);
+    } else if (i === 2) {
+      // Miércoles: Robnaidy en la mañana, Otmary en la tarde (o viceversa rotando por semana)
+      morningShift.push(secondaryWorker);
+      afternoonShift.push(primaryWorker);
+    } else if (i === 4) {
+      // Viernes: Invertido respecto al miércoles para cumplir la alternancia
+      morningShift.push(primaryWorker);
+      afternoonShift.push(secondaryWorker);
     } else if (i % 2 === 0) {
-      morningShift.push(mondayMorningWorker);
-      afternoonShift.push(mondayAfternoonWorker);
+      // Lunes
+      morningShift.push(primaryWorker);
+      afternoonShift.push(secondaryWorker);
     } else {
-      morningShift.push(mondayAfternoonWorker);
-      afternoonShift.push(mondayMorningWorker);
+      // Martes
+      morningShift.push(secondaryWorker);
+      afternoonShift.push(primaryWorker);
     }
   }
 
@@ -171,7 +160,7 @@ export default function App() {
   return (
     <div className="min-h-screen flex flex-col justify-between antialiased">
       <div className="w-full">
-        <header className="bg-white/80 backdrop-blur-md border-b border-stone-200/60 sticky top-0 z-10 no-print">
+        <header className="bg-white/85 backdrop-blur-md border-b border-stone-200/60 sticky top-0 z-10 no-print">
           <div className="max-w-4xl mx-auto px-6 py-4 flex justify-between items-center">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-brand-indigo flex items-center justify-center text-white shadow-sm">
@@ -250,7 +239,7 @@ export default function App() {
                     <th className="py-4 px-4 sm:px-6 font-semibold print:font-bold uppercase tracking-wider text-[11px] text-center w-36 sm:w-40">
                       <div className="flex items-center justify-center gap-1.5">
                         <span>Turno</span>
-                        <button onClick={openModal} className="text-stone-400 hover:text-brand-indigo transition no-print">
+                        <button onClick={openModal} className="text-stone-400 hover:text-brand-indigo transition no-print" title="Editar Horarios">
                           <i className="fa-solid fa-pencil text-[10px]"></i>
                         </button>
                       </div>
