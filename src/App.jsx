@@ -29,44 +29,66 @@ const monthNames = [
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
 ];
 
+// Función auxiliar global para calcular las semanas del mes
+const calculateMonthWeeks = (year, month) => {
+  const weeks = [];
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+
+  let currentMonday = new Date(firstDay);
+  let dayOfWeek = currentMonday.getDay();
+  let diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  currentMonday.setDate(currentMonday.getDate() + diffToMonday);
+
+  while (currentMonday <= lastDay) {
+    weeks.push(new Date(currentMonday));
+    currentMonday = new Date(currentMonday);
+    currentMonday.setDate(currentMonday.getDate() + 7);
+  }
+  return weeks;
+};
+
+// Obtiene la fecha objetivo (si es fin de semana, pasa al lunes siguiente)
+const getInitialDate = () => {
+  const today = new Date();
+  const dayOfWeek = today.getDay();
+  if (dayOfWeek === 6 || dayOfWeek === 0) {
+    const daysToAdd = dayOfWeek === 6 ? 2 : 1;
+    const nextMon = new Date(today);
+    nextMon.setDate(today.getDate() + daysToAdd);
+    return nextMon;
+  }
+  return today;
+};
+
 export default function App() {
-  // Cambio automático si hoy es fin de semana (Sábado/Domingo)
-  const [currentDate, setCurrentDate] = useState(() => {
-    const today = new Date();
-    const dayOfWeek = today.getDay();
-    if (dayOfWeek === 6 || dayOfWeek === 0) {
-      const daysToAdd = dayOfWeek === 6 ? 2 : 1;
-      const nextMon = new Date(today);
-      nextMon.setDate(today.getDate() + daysToAdd);
-      return nextMon;
-    }
-    return today;
+  const [currentDate, setCurrentDate] = useState(getInitialDate);
+  
+  // Sincroniza la semana activa con la fecha inicial corregida
+  const [weekInMonth, setWeekInMonth] = useState(() => {
+    const initialDate = getInitialDate();
+    const weeks = calculateMonthWeeks(initialDate.getFullYear(), initialDate.getMonth());
+    
+    let targetMonday = new Date(initialDate);
+    let day = targetMonday.getDay();
+    let diff = day === 0 ? -6 : 1 - day;
+    targetMonday.setDate(targetMonday.getDate() + diff);
+    targetMonday.setHours(0,0,0,0);
+
+    const foundIdx = weeks.findIndex(w => {
+      const wDate = new Date(w);
+      wDate.setHours(0,0,0,0);
+      return wDate.getTime() === targetMonday.getTime();
+    });
+
+    return foundIdx !== -1 ? foundIdx + 1 : 1;
   });
 
-  const [weekInMonth, setWeekInMonth] = useState(1);
   const [morningHours, setMorningHours] = useState('9:00 AM - 12:00 PM');
   const [afternoonHours, setAfternoonHours] = useState('3:00 PM - 6:00 PM');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [tempMorning, setTempMorning] = useState('');
   const [tempAfternoon, setTempAfternoon] = useState('');
-
-  const calculateMonthWeeks = (year, month) => {
-    const weeks = [];
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-
-    let currentMonday = new Date(firstDay);
-    let dayOfWeek = currentMonday.getDay();
-    let diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-    currentMonday.setDate(currentMonday.getDate() + diffToMonday);
-
-    while (currentMonday <= lastDay) {
-      weeks.push(new Date(currentMonday));
-      currentMonday = new Date(currentMonday);
-      currentMonday.setDate(currentMonday.getDate() + 7);
-    }
-    return weeks;
-  };
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -85,14 +107,6 @@ export default function App() {
   const morningShift = [];
   const afternoonShift = [];
 
-  // Mapeo explicito del ciclo de rotación (Lunes, Martes, Miércoles, Jueves, Viernes):
-  // Ignorando el Jueves (juntas en la mañana), los días giran intercaladamente:
-  // Día 0 (Lunes): A en la Mañana, B en la Tarde
-  // Día 1 (Martes): B en la Mañana, A en la Tarde
-  // Día 2 (Miércoles): A en la Mañana, B en la Tarde
-  // Día 3 (Jueves): Ambas Mañana, Libre Tarde
-  // Día 4 (Viernes): B en la Mañana, A en la Tarde (Opuesto al Miércoles)
-  
   const rotationCycle = [
     { morning: mondayMorningWorker, afternoon: mondayAfternoonWorker }, // Lunes
     { morning: mondayAfternoonWorker, afternoon: mondayMorningWorker }, // Martes
