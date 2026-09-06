@@ -344,7 +344,7 @@ export default function App() {
                         <th 
                           key={day} 
                           className={`py-3 px-2 sm:px-4 font-semibold print:font-bold text-stone-700 print:text-stone-900 text-center transition-colors ${
-                            isToday ? 'bg-amber-100/60 border-b-2 border-amber-400' : ''
+                            isToday ? 'bg-amber-100/60 border-b-2 border-amber-400 print:bg-transparent print:border-b-0' : ''
                           }`}
                         >
                           <div className="flex items-center justify-center gap-1">
@@ -383,7 +383,7 @@ export default function App() {
                         <td 
                           key={i} 
                           className={`py-4 px-2 sm:px-3 text-center transition-colors ${
-                            isToday ? 'bg-amber-50/40' : ''
+                            isToday ? 'bg-amber-50/40 print:bg-transparent' : ''
                           }`}
                         >
                           {renderEmployeeBadge(emp)}
@@ -411,7 +411,7 @@ export default function App() {
                         <td 
                           key={i} 
                           className={`py-4 px-2 sm:px-3 text-center transition-colors ${
-                            isToday ? 'bg-amber-50/40' : ''
+                            isToday ? 'bg-amber-50/40 print:bg-transparent' : ''
                           }`}
                         >
                           {renderEmployeeBadge(emp)}
