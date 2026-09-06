@@ -30,7 +30,7 @@ const monthNames = [
 ];
 
 export default function App() {
-  // Avance automático si hoy es fin de semana (sábado/domingo)
+  // Cambio automático si hoy es fin de semana (Sábado/Domingo)
   const [currentDate, setCurrentDate] = useState(() => {
     const today = new Date();
     const dayOfWeek = today.getDay();
@@ -85,18 +85,25 @@ export default function App() {
   const morningShift = [];
   const afternoonShift = [];
 
-  // Asignación de días intercalados
-  // Lunes(0): Worker A | Martes(1): Worker B | Miércoles(2): Worker A
-  // Jueves(3): Ambas Mañana | Viernes(4): Worker B
+  // Mapeo explicito del ciclo de rotación (Lunes, Martes, Miércoles, Jueves, Viernes):
+  // Ignorando el Jueves (juntas en la mañana), los días giran intercaladamente:
+  // Día 0 (Lunes): A en la Mañana, B en la Tarde
+  // Día 1 (Martes): B en la Mañana, A en la Tarde
+  // Día 2 (Miércoles): A en la Mañana, B en la Tarde
+  // Día 3 (Jueves): Ambas Mañana, Libre Tarde
+  // Día 4 (Viernes): B en la Mañana, A en la Tarde (Opuesto al Miércoles)
+  
+  const rotationCycle = [
+    { morning: mondayMorningWorker, afternoon: mondayAfternoonWorker }, // Lunes
+    { morning: mondayAfternoonWorker, afternoon: mondayMorningWorker }, // Martes
+    { morning: mondayMorningWorker, afternoon: mondayAfternoonWorker }, // Miércoles
+    { morning: [OTMARY, ROBNAIDY], afternoon: FREE },                   // Jueves
+    { morning: mondayAfternoonWorker, afternoon: mondayMorningWorker }  // Viernes
+  ];
+
   for (let i = 0; i < 5; i++) {
-    if (i === 3) {
-      morningShift.push([OTMARY, ROBNAIDY]);
-      afternoonShift.push(FREE);
-    } else {
-      const isAlt = i % 2 === 0;
-      morningShift.push(isAlt ? mondayMorningWorker : mondayAfternoonWorker);
-      afternoonShift.push(isAlt ? mondayAfternoonWorker : mondayMorningWorker);
-    }
+    morningShift.push(rotationCycle[i].morning);
+    afternoonShift.push(rotationCycle[i].afternoon);
   }
 
   const nextWeek = () => {
