@@ -241,7 +241,7 @@ export default function App() {
           {isWeekendNow && (
             <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-center gap-2 text-amber-800 text-xs font-medium no-print">
               <i className="fa-solid fa-clock-rotate-left text-amber-600"></i>
-              <span>Viendo automáticamente el horario para la <strong>semana entrante</strong>.</span>
+              <span>Viendo el horario para la <strong>semana entrante</strong>.</span>
             </div>
           )}
 
