@@ -30,7 +30,19 @@ const monthNames = [
 ];
 
 export default function App() {
-  const [currentDate, setCurrentDate] = useState(new Date());
+  // Avance automático si hoy es fin de semana (sábado/domingo)
+  const [currentDate, setCurrentDate] = useState(() => {
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    if (dayOfWeek === 6 || dayOfWeek === 0) {
+      const daysToAdd = dayOfWeek === 6 ? 2 : 1;
+      const nextMon = new Date(today);
+      nextMon.setDate(today.getDate() + daysToAdd);
+      return nextMon;
+    }
+    return today;
+  });
+
   const [weekInMonth, setWeekInMonth] = useState(1);
   const [morningHours, setMorningHours] = useState('9:00 AM - 12:00 PM');
   const [afternoonHours, setAfternoonHours] = useState('3:00 PM - 6:00 PM');
@@ -62,31 +74,29 @@ export default function App() {
   const activeWeekIndex = Math.min(Math.max(weekInMonth - 1, 0), monthWeeks.length - 1);
   const selectedMonday = monthWeeks[activeWeekIndex] || new Date();
 
-  // Cambiamos el cálculo global basado en sábado. 
-  // Al avanzar al sábado, tomamos la fecha del sábado (selectedMonday + 5 días) para calcular la semana de rotación automáticamente.
-  const saturdayOfSelectedWeek = new Date(selectedMonday);
-  saturdayOfSelectedWeek.setDate(selectedMonday.getDate() + 5);
-
-  const epoch = new Date(2024, 0, 6); // Usamos un sábado base conocido
-  const diffTime = Math.abs(saturdayOfSelectedWeek - epoch);
+  const epoch = new Date(2024, 0, 1);
+  const diffTime = Math.abs(selectedMonday - epoch);
   const weekNumberGlobal = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7));
   const isOddWeek = weekNumberGlobal % 2 !== 0;
 
-  // Secuencias exactas solicitadas:
-  // Mañana: Lunes a Viernes -> [Robnaidy, Otmary, Robnaidy, Otmary, Robnaidy] (Semana Impar) o alternada (Semana Par)
-  // Tarde: Lunes a Viernes -> [Otmary, Robnaidy, Otmary, [Otmary, Robnaidy] (Libre el jueves tarde), Robnaidy, Otmary] (Ajustado según orden exacto)
-  
+  const mondayMorningWorker = isOddWeek ? OTMARY : ROBNAIDY;
+  const mondayAfternoonWorker = isOddWeek ? ROBNAIDY : OTMARY;
+
   const morningShift = [];
   const afternoonShift = [];
 
-  if (isOddWeek) {
-    // Semana tipo A (Impar)
-    morningShift.push(ROBNAIDY, OTMARY, ROBNAIDY, OTMARY, ROBNAIDY);
-    afternoonShift.push(OTMARY, ROBNAIDY, OTMARY, [OTMARY, ROBNAIDY], ROBNAIDY);
-  } else {
-    // Semana tipo B (Par - rotadas)
-    morningShift.push(OTMARY, ROBNAIDY, OTMARY, ROBNAIDY, OTMARY);
-    afternoonShift.push(ROBNAIDY, OTMARY, ROBNAIDY, [ROBNAIDY, OTMARY], OTMARY);
+  // Asignación de días intercalados
+  // Lunes(0): Worker A | Martes(1): Worker B | Miércoles(2): Worker A
+  // Jueves(3): Ambas Mañana | Viernes(4): Worker B
+  for (let i = 0; i < 5; i++) {
+    if (i === 3) {
+      morningShift.push([OTMARY, ROBNAIDY]);
+      afternoonShift.push(FREE);
+    } else {
+      const isAlt = i % 2 === 0;
+      morningShift.push(isAlt ? mondayMorningWorker : mondayAfternoonWorker);
+      afternoonShift.push(isAlt ? mondayAfternoonWorker : mondayMorningWorker);
+    }
   }
 
   const nextWeek = () => {
@@ -136,15 +146,6 @@ export default function App() {
               <span>{e.name}</span>
             </div>
           ))}
-        </div>
-      );
-    }
-
-    if (emp === FREE) {
-      return (
-        <div className={`${FREE.colorBg} ${FREE.colorText} ${FREE.border} border py-2.5 px-3 rounded-xl flex items-center justify-center gap-2 font-medium text-xs sm:text-sm`}>
-          <span className={`w-2 h-2 rounded-full ${FREE.dotColor} shrink-0`}></span>
-          <span>{FREE.name}</span>
         </div>
       );
     }
@@ -236,7 +237,14 @@ export default function App() {
               <table className="w-full border-collapse text-left text-xs sm:text-sm">
                 <thead>
                   <tr className="bg-brand-beige/50 print:bg-stone-200 border-b border-stone-200/60 print:border-stone-400 text-stone-600 print:text-stone-900">
-                    <th className="py-4 px-4 sm:px-6 font-semibold print:font-bold uppercase tracking-wider text-[11px] text-center w-36 sm:w-40">Turno</th>
+                    <th className="py-4 px-4 sm:px-6 font-semibold print:font-bold uppercase tracking-wider text-[11px] text-center w-36 sm:w-40">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <span>Turno</span>
+                        <button onClick={openModal} className="text-stone-400 hover:text-brand-indigo transition no-print" title="Editar horarios">
+                          <i className="fa-solid fa-pencil text-[10px]"></i>
+                        </button>
+                      </div>
+                    </th>
                     {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'].map((day, idx) => {
                       const d = new Date(selectedMonday);
                       d.setDate(selectedMonday.getDate() + idx);
@@ -255,12 +263,9 @@ export default function App() {
                   <tr>
                     <td className="py-5 px-4 font-semibold print:font-bold text-stone-600 print:text-stone-900 bg-brand-bgSoft/60 print:bg-stone-100 border-r border-stone-100 print:border-stone-400 text-center">
                       <div className="flex flex-col items-center justify-center gap-1">
-                        <div className="flex items-center justify-center gap-1.5 text-stone-700 print:text-stone-900 font-bold w-full">
+                        <div className="flex items-center gap-1.5 text-stone-700 print:text-stone-900 font-bold">
                           <i className="fa-regular fa-sun text-amber-500 print:text-amber-600 text-sm"></i>
                           <span className="text-xs">Mañana</span>
-                          <button onClick={openModal} className="text-stone-400 hover:text-brand-indigo transition no-print ml-1">
-                            <i className="fa-solid fa-pencil text-[10px]"></i>
-                          </button>
                         </div>
                         <span className="text-[10px] text-stone-500 print:text-stone-700 print:font-bold bg-stone-200/50 print:bg-stone-300 px-2 py-0.5 rounded-full">{morningHours}</span>
                       </div>
@@ -275,12 +280,9 @@ export default function App() {
                   <tr>
                     <td className="py-5 px-4 font-semibold print:font-bold text-stone-600 print:text-stone-900 bg-brand-bgSoft/60 print:bg-stone-100 border-r border-stone-100 print:border-stone-400 text-center">
                       <div className="flex flex-col items-center justify-center gap-1">
-                        <div className="flex items-center justify-center gap-1.5 text-stone-700 print:text-stone-900 font-bold w-full">
+                        <div className="flex items-center gap-1.5 text-stone-700 print:text-stone-900 font-bold">
                           <i className="fa-regular fa-moon text-indigo-400 print:text-indigo-600 text-sm"></i>
                           <span className="text-xs">Tarde</span>
-                          <button onClick={openModal} className="text-stone-400 hover:text-brand-indigo transition no-print ml-1">
-                            <i className="fa-solid fa-pencil text-[10px]"></i>
-                          </button>
                         </div>
                         <span className="text-[10px] text-stone-500 print:text-stone-700 print:font-bold bg-stone-200/50 print:bg-stone-300 px-2 py-0.5 rounded-full">{afternoonHours}</span>
                       </div>
